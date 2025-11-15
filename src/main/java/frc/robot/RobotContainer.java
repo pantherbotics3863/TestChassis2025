@@ -10,6 +10,9 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.Optional;
 
+import org.littletonrobotics.junction.Logger;
+import org.photonvision.PhotonCamera;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -21,6 +24,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -66,6 +71,10 @@ public class RobotContainer {
         configureBindings();
     }
 
+    public PhotonCamera getCammy(){
+        return visionSystem.getCamera();
+    }
+
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
@@ -106,7 +115,9 @@ public class RobotContainer {
     public void setFieldRelativeFromCamera(){
         Optional<Pose3d> fieldPose = visionSystem.getFieldPose();
         if (fieldPose.isPresent()){
-            drivetrain.addVisionMeasurement(new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d()), Timer.getTimestamp());
+            Pose2d visionPose = new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d());
+            Logger.recordOutput("Vision/visionPose", visionPose);
+            // drivetrain.addVisionMeasurement(new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d()), Timer.getTimestamp());
         }
     }
 

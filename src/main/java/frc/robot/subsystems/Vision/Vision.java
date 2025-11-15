@@ -3,7 +3,6 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems.Vision;
-import java.lang.StackWalker.Option;
 import java.util.Optional;
 
 import org.photonvision.PhotonCamera;
@@ -23,6 +22,10 @@ public class Vision extends SubsystemBase {
 
   PhotonCamera cam;
 
+  public PhotonCamera getCamera(){
+    return cam;
+  }
+
   public PhotonTrackedTarget getTargetPose(){
     return cam.getLatestResult().getBestTarget();
   }
@@ -40,10 +43,5 @@ public class Vision extends SubsystemBase {
 
   public Vision(String cameraNameString) {
     cam = new PhotonCamera(cameraNameString);
-  }
-
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
   }
 }
