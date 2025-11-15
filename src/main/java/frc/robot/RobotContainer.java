@@ -4,21 +4,31 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
+import java.util.Optional;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import choreo.auto.AutoFactory;
+import choreo.auto.AutoRoutine;
+import choreo.auto.AutoTrajectory;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Vision.Vision;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -37,8 +47,23 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+    private final Vision visionSystem = new Vision("cammy");
+
+    // Choreo AutoFactory
+
+    private final AutoFactory autoFactory;
+
+  
     public RobotContainer() {
-        configureBindings();    
+        autoFactory = new AutoFactory(
+            drivetrain::getPose,
+            drivetrain::resetPose, 
+            drivetrain::followPath, 
+            true, 
+            drivetrain
+        );
+
+        configureBindings();
     }
 
     private void configureBindings() {
@@ -78,7 +103,31 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
+    public void setFieldRelativeFromCamera(){
+        Optional<Pose3d> fieldPose = visionSystem.getFieldPose();
+        if (fieldPose.isPresent()){
+            drivetrain.addVisionMeasurement(new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d()), Timer.getTimestamp());
+        }
     }
+
+    public AutoRoutine myAuto() {
+        AutoRoutine routine = autoFactory.newRoutine("myRoutine");
+
+        AutoTrajectory spinInCircle = routine.trajectory("moveInSquare");
+
+        routine.active().onTrue(
+            Commands.sequence(
+                spinInCircle.resetOdometry(),
+                spinInCircle.cmd()
+            )
+            
+        );
+
+        return routine;
+    }
+
+    public Command getAutonomousCommand() {
+        return myAuto().cmd();
+    }
+
 }
