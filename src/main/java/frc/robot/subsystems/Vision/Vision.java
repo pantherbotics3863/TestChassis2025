@@ -3,10 +3,13 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems.Vision;
+import java.lang.StackWalker.Option;
 import java.util.Optional;
 
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
+import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -26,15 +29,21 @@ public class Vision extends SubsystemBase {
     return cam;
   }
 
-  public PhotonTrackedTarget getTargetPose(){
-    return cam.getLatestResult().getBestTarget();
+  public Optional<PhotonTrackedTarget> getTargetPose(){
+    PhotonPipelineResult result = cam.getLatestResult();
+    if (result.hasTargets()){
+      return Optional.of(result.getBestTarget());
+    }
+    return Optional.empty();
   }
 
   public Optional<Pose3d> getFieldPose() {
-    if (cam.getLatestResult().hasTargets()){
-      PhotonTrackedTarget target = getTargetPose();
+    Optional<PhotonTrackedTarget> potentialTarget = getTargetPose();
+    if (potentialTarget.isPresent()){
+      PhotonTrackedTarget target = potentialTarget.get();
       if (aprilTagFieldLayout.getTagPose(target.getFiducialId()).isPresent()){
-        return Optional.of( PhotonUtils.estimateFieldToRobotAprilTag(target.getBestCameraToTarget(), aprilTagFieldLayout.getTagPose(target.getFiducialId()).get(), VisionConstants.cameraToRobot) );
+        return Optional.of( PhotonUtils.estimateFieldToRobotAprilTag(target.getBestCameraToTarget(), aprilTagFieldLayout.getTagPose(target.getFiducialId()).get(), VisionConstants.robotToCamera) );
+      
       }
     }
     return Optional.empty();

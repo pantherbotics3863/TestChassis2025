@@ -115,8 +115,7 @@ public class RobotContainer {
     public void setFieldRelativeFromCamera(){
         Optional<Pose3d> fieldPose = visionSystem.getFieldPose();
         if (fieldPose.isPresent()){
-            Pose2d visionPose = new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d());
-            Logger.recordOutput("Vision/visionPose", visionPose);
+            Logger.recordOutput("Vision/visionPose", fieldPose.get().toPose2d());
             // drivetrain.addVisionMeasurement(new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d()), Timer.getTimestamp());
         }
     }
