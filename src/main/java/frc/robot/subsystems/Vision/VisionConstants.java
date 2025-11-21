@@ -7,6 +7,8 @@ package frc.robot.subsystems.Vision;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
@@ -14,9 +16,11 @@ import edu.wpi.first.math.geometry.Transform3d;
 public class VisionConstants {
     // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
     // Super helpful above ^
-    public static final Transform3d cameraToRobot = new Transform3d(Inches.of(-5.5), Inches.of(-2), Inches.of(-16), 
+    public static final Transform3d kCameraToRobot = new Transform3d(Inches.of(-5.5), Inches.of(-2), Inches.of(-16), 
         new Rotation3d(Degrees.of(90),Degrees.of(-10),Degrees.of(25))
     );
-
-    public static final Transform3d robotToCamera = cameraToRobot.inverse();
+    
+    public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+    
+    public static final Transform3d kRobotToCamera = kCameraToRobot.inverse();
 }

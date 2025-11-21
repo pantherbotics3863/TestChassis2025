@@ -34,7 +34,7 @@ public class VisionSim extends SubsystemBase {
 
     // Actual simulated camera
     cammySim = new PhotonCameraSim(camera, cameraProperties);
-    visionSim.addCamera(cammySim, VisionConstants.robotToCamera);
+    visionSim.addCamera(cammySim, VisionConstants.kRobotToCamera);
 
   }
 
