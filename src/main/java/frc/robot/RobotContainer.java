@@ -116,7 +116,7 @@ public class RobotContainer {
         Optional<Pose3d> fieldPose = visionSystem.getFieldPose();
         if (fieldPose.isPresent()){
             Logger.recordOutput("Vision/visionPose", fieldPose.get().toPose2d());
-            // drivetrain.addVisionMeasurement(new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d()), Timer.getTimestamp());
+            drivetrain.addVisionMeasurement(new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d()), Timer.getTimestamp());
         }
     }
 
