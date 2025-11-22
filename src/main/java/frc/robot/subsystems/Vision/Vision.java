@@ -3,10 +3,14 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems.Vision;
+import java.lang.StackWalker.Option;
 import java.util.Optional;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonUtils;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
@@ -17,7 +21,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Vision extends SubsystemBase {
   /** Creates a new Vision. */
 
-  PhotonCamera cam;
+  private final PhotonCamera cam;
+  private final PhotonPoseEstimator photonPoseEstimator;
 
   public PhotonCamera getCamera(){
     return cam;
@@ -32,18 +37,29 @@ public class Vision extends SubsystemBase {
   }
 
   public Optional<Pose3d> getFieldPose() {
-    Optional<PhotonTrackedTarget> potentialTarget = getTargetPose();
-    if (potentialTarget.isPresent()){
-      PhotonTrackedTarget target = potentialTarget.get();
-      if (VisionConstants.kTagLayout.getTagPose(target.getFiducialId()).isPresent()){
-        return Optional.of( PhotonUtils.estimateFieldToRobotAprilTag(target.getBestCameraToTarget(), VisionConstants.kTagLayout.getTagPose(target.getFiducialId()).get(), VisionConstants.kRobotToCamera) );
-      
-      }
+    // Optional<PhotonTrackedTarget> potentialTarget = getTargetPose();
+    // if (potentialTarget.isPresent()){
+    //   PhotonTrackedTarget target = potentialTarget.get();
+    //   if (VisionConstants.kTagLayout.getTagPose(target.getFiducialId()).isPresent()){
+    //     return Optional.of( PhotonUtils.estimateFieldToRobotAprilTag(target.getBestCameraToTarget(), VisionConstants.kTagLayout.getTagPose(target.getFiducialId()).get(), VisionConstants.kCameraToRobot) );
+    //   }
+    // }
+    // return Optional.empty();
+
+    Optional<EstimatedRobotPose> estimatedPose = Optional.empty();
+    for (PhotonPipelineResult newResult : cam.getAllUnreadResults()){
+      estimatedPose = photonPoseEstimator.update(newResult);
     }
-    return Optional.empty();
+    if (estimatedPose.isPresent()){
+      return Optional.of(estimatedPose.get().estimatedPose);
+    } else {
+      return Optional.empty();
+    }
+    
   }
 
   public Vision(String cameraNameString) {
     cam = new PhotonCamera(cameraNameString);
+    photonPoseEstimator = new PhotonPoseEstimator(VisionConstants.kTagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCamera);
   }
 }
