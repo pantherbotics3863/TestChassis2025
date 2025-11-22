@@ -10,19 +10,26 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.Optional;
 
+import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.RuntimeType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -84,6 +91,14 @@ public class RobotContainer {
                 drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            ).alongWith(
+                Commands.runOnce(()->{
+                    drivetrain.getDrivetrainSimulation().runChassisSpeeds(
+                        new ChassisSpeeds(-joystick.getLeftY() * MaxSpeed, -joystick.getLeftX() * MaxSpeed, -joystick.getRightX() * MaxAngularRate),
+                        Translation2d.kZero, 
+                        true,
+                        true);
+                })
             )
         );
 
@@ -98,13 +113,22 @@ public class RobotContainer {
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
         ));
+        joystick.y().onTrue(
+            Commands.runOnce(()->{
+                if (Robot.isSimulation()){
+                    Arena2025Reefscape.getInstance().addGamePiece(new ReefscapeCoralOnField(new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
+                }
+            })
+        );
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        // joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        // joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        // joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+
+
 
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
@@ -116,8 +140,12 @@ public class RobotContainer {
         Optional<Pose3d> fieldPose = visionSystem.getFieldPose();
         if (fieldPose.isPresent()){
             Logger.recordOutput("Vision/visionPose", fieldPose.get().toPose2d());
-            drivetrain.addVisionMeasurement(new Pose2d(fieldPose.get().getX(), fieldPose.get().getY(), fieldPose.get().getRotation().toRotation2d()), Timer.getTimestamp());
+            drivetrain.addVisionMeasurement(fieldPose.get().toPose2d(), Timer.getTimestamp());
+            if (Robot.isSimulation()){
+                drivetrain.getDrivetrainSimulation().addVisionEstimation(fieldPose.get().toPose2d(), Timer.getTimestamp());
+            }
         }
+        
     }
 
     public AutoRoutine myAuto() {

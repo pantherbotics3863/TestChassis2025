@@ -4,6 +4,11 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.Supplier;
 
+import org.ironmaple.simulation.drivesims.GyroSimulation;
+import org.ironmaple.simulation.drivesims.SelfControlledSwerveDriveSimulation;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -24,7 +29,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -53,6 +58,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    // private final DriveTrainSimulationConfig driveTrainSimulationConfig =  new DriveTrainSimulationConfig(Pounds.of(100), Inches.of(5), Inches.of(5), Inches.of(30), Inches.of(30), new GyroSimulation(0.02, 0.05), new Sim  );
+    private final DriveTrainSimulationConfig driveTrainSimulationConfig =  DriveTrainSimulationConfig.Default()
+        .withRobotMass(Pounds.of(100))
+        .withBumperSize(Inches.of(35), Inches.of(35))
+        .withTrackLengthTrackWidth(Inches.of(30), Inches.of(30))
+    ;
+
+    private final SelfControlledSwerveDriveSimulation simulatedDrivetrain = new SelfControlledSwerveDriveSimulation(new SwerveDriveSimulation(driveTrainSimulationConfig, Pose2d.kZero));
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -319,6 +333,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return getState().Pose;
     }
 
+    public Pose2d getSimPose() {
+        return simulatedDrivetrain.getActualPoseInSimulationWorld();
+    }
+
+    public Pose2d getSimOdometryPose(){
+        return simulatedDrivetrain.getOdometryEstimatedPose();
+    }
+
     public void followPath(SwerveSample sample) {
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -338,4 +360,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         .withWheelForceFeedforwardsY(sample.moduleForcesY()));
     }
 
+    public SelfControlledSwerveDriveSimulation getDrivetrainSimulation(){
+        return simulatedDrivetrain;
+    }
+
+    
 }
