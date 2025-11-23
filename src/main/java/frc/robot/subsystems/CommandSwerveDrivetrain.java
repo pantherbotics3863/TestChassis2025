@@ -4,8 +4,6 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.Supplier;
 
-import org.ironmaple.simulation.drivesims.COTS;
-import org.ironmaple.simulation.drivesims.GyroSimulation;
 import org.ironmaple.simulation.drivesims.SelfControlledSwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
@@ -21,10 +19,8 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;

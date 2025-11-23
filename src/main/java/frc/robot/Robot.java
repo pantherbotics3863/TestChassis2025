@@ -4,26 +4,10 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Pounds;
-
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.GyroSimulation;
-import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
-import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
-import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
-import org.littletonrobotics.junction.wpilog.WPILOGReader;
-import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-import org.photonvision.simulation.VisionSystemSim;
-
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.units.measure.Mass;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.Vision.VisionSim;
