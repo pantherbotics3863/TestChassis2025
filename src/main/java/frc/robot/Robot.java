@@ -37,9 +37,9 @@ public class Robot extends LoggedRobot {
   public Robot() {
 
     Logger.addDataReceiver(new NT4Publisher());
-    if (isSimulation()){
-      setUseTiming(false); // Run as fast as possible
-    }
+    // if (isSimulation()){
+    //   setUseTiming(false); // Run as fast as possible
+    // }
 
     Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
     m_robotContainer = new RobotContainer();
