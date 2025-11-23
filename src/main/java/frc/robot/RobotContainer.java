@@ -92,12 +92,14 @@ public class RobotContainer {
                     .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ).alongWith(
-                Commands.runOnce(()->{
-                    drivetrain.getDrivetrainSimulation().runChassisSpeeds(
-                        new ChassisSpeeds(-joystick.getLeftY() * MaxSpeed, -joystick.getLeftX() * MaxSpeed, -joystick.getRightX() * MaxAngularRate),
-                        Translation2d.kZero, 
-                        true,
-                        true);
+                Commands.run(()->{
+                    if (Robot.isSimulation()){
+                        drivetrain.getSimulatedDrivetrain().runChassisSpeeds(
+                            new ChassisSpeeds(-joystick.getLeftY() * MaxSpeed, -joystick.getLeftX() * MaxSpeed, -joystick.getRightX() * MaxAngularRate),
+                            Translation2d.kZero,
+                            true,
+                            false);
+                    }
                 })
             )
         );
@@ -142,7 +144,7 @@ public class RobotContainer {
             Logger.recordOutput("Vision/visionPose", fieldPose.get().toPose2d());
             drivetrain.addVisionMeasurement(fieldPose.get().toPose2d(), Timer.getTimestamp());
             if (Robot.isSimulation()){
-                drivetrain.getDrivetrainSimulation().addVisionEstimation(fieldPose.get().toPose2d(), Timer.getTimestamp());
+                drivetrain.getSimulatedDrivetrain().addVisionEstimation(fieldPose.get().toPose2d(), Timer.getTimestamp());
             }
         }
         

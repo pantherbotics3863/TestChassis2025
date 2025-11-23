@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.Supplier;
 
+import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.GyroSimulation;
 import org.ironmaple.simulation.drivesims.SelfControlledSwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -20,8 +21,10 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -66,7 +69,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         .withTrackLengthTrackWidth(Inches.of(30), Inches.of(30))
     ;
 
-    private final SelfControlledSwerveDriveSimulation simulatedDrivetrain = new SelfControlledSwerveDriveSimulation(new SwerveDriveSimulation(driveTrainSimulationConfig, Pose2d.kZero));
+    private final SelfControlledSwerveDriveSimulation simulatedDrivetrain = new SelfControlledSwerveDriveSimulation(new SwerveDriveSimulation(driveTrainSimulationConfig, TunerConstants.initialPose));
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -360,7 +363,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         .withWheelForceFeedforwardsY(sample.moduleForcesY()));
     }
 
-    public SelfControlledSwerveDriveSimulation getDrivetrainSimulation(){
+    public SelfControlledSwerveDriveSimulation getSimulatedDrivetrain(){
         return simulatedDrivetrain;
     }
 

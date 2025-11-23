@@ -102,17 +102,17 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void simulationInit(){
-    
+    Arena2025Reefscape.getInstance().addDriveTrainSimulation(m_robotContainer.drivetrain.getSimulatedDrivetrain().getDriveTrainSimulation());
   }
 
   @Override
   public void simulationPeriodic() {
-    visionSim.visionPeriodic(m_robotContainer.drivetrain.getPose());
+    visionSim.visionPeriodic(m_robotContainer.drivetrain.getSimPose());
     Arena2025Reefscape.getInstance().simulationPeriodic();
 
     Logger.recordOutput("FieldSimulation/Coral", 
     Arena2025Reefscape.getInstance().getGamePiecesArrayByType("Coral"));
-    m_robotContainer.drivetrain.getDrivetrainSimulation().periodic();
+    m_robotContainer.drivetrain.getSimulatedDrivetrain().periodic();
 
     Logger.recordOutput("FieldSimulation/RobotPose", m_robotContainer.drivetrain.getSimPose());
     Logger.recordOutput("FieldSimulation/RobotOdometry", m_robotContainer.drivetrain.getSimOdometryPose());
