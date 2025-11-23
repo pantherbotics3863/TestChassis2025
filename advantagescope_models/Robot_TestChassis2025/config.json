@@ -1,0 +1,13 @@
+{
+  "name": "Test Chassis 2025",
+  "disableSimplification": true,
+  "rotations": [
+  {
+  "axis": "z",
+  "degrees": -90
+  }
+  ],
+  "position": [0, 0, 0.1],
+  "cameras": [],
+  "components": []
+}
