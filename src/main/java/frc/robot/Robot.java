@@ -4,10 +4,14 @@
 
 package frc.robot;
 
+import java.util.Optional;
+
 import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.Vision.VisionSim;
@@ -100,6 +104,14 @@ public class Robot extends LoggedRobot {
 
     Logger.recordOutput("FieldSimulation/RobotPose", m_robotContainer.drivetrain.getSimPose());
     Logger.recordOutput("FieldSimulation/RobotOdometry", m_robotContainer.drivetrain.getSimOdometryPose());
+
+    Optional<PhotonTrackedTarget> trackedTarget = m_robotContainer.getVisionSubsystem().getTargetPose();
+    
+    if (trackedTarget.isPresent()){
+      Logger.recordOutput("Vision/TargetData/ID", trackedTarget.get().fiducialId);
+      Logger.recordOutput("Vision/TargetData/Yaw", trackedTarget.get().getYaw());
+      Logger.recordOutput("Vision/TargetData/Yaw_RAD", trackedTarget.get().getYaw() * Math.PI /180.0);
+    }
 
   }
 }

@@ -14,6 +14,7 @@ import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -34,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Vision.Vision;
+import frc.robot.subsystems.Vision.VisionConstants;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -54,9 +56,13 @@ public class RobotContainer {
 
     private final Vision visionSystem = new Vision("cammy");
 
+    int targetId = -1;
+
     // Choreo AutoFactory
 
     private final AutoFactory autoFactory;
+
+    private double rotationalAdjustment = 0;
 
   
     public RobotContainer() {
@@ -75,6 +81,10 @@ public class RobotContainer {
         return visionSystem.getCamera();
     }
 
+    public Vision getVisionSubsystem(){
+        return visionSystem;
+    }
+
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
@@ -83,12 +93,12 @@ public class RobotContainer {
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate + rotationalAdjustment * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ).alongWith(
                 Commands.run(()->{
                     if (Robot.isSimulation()){
                         drivetrain.getSimulatedDrivetrain().runChassisSpeeds(
-                            new ChassisSpeeds(-joystick.getLeftY() * MaxSpeed, -joystick.getLeftX() * MaxSpeed, -joystick.getRightX() * MaxAngularRate),
+                            new ChassisSpeeds(-joystick.getLeftY() * MaxSpeed, -joystick.getLeftX() * MaxSpeed, -joystick.getRightX() * MaxAngularRate + rotationalAdjustment * MaxAngularRate),
                             Translation2d.kZero,
                             true,
                             false);
@@ -115,6 +125,30 @@ public class RobotContainer {
                 }
             })
         );
+
+
+        joystick.rightBumper().whileTrue(Commands.run(
+            ()->{
+                Optional<PhotonTrackedTarget> trackedTarget = visionSystem.getTargetPose();
+                if (trackedTarget.isPresent()){
+                    if (targetId == -1){
+                        targetId = trackedTarget.get().fiducialId;
+                    } else if (targetId == trackedTarget.get().fiducialId){
+                        rotationalAdjustment = -1.0 * (trackedTarget.get().getYaw() * Math.PI / 180.0) - VisionConstants.kCameraToRobot.getRotation().getZ();
+                    } else {
+                        rotationalAdjustment = 0;
+                    }
+                } else {
+                    rotationalAdjustment = 0;
+                }
+                Logger.recordOutput("rotationalAdjustment", rotationalAdjustment);
+            }
+        ));
+
+        joystick.rightBumper().onFalse(Commands.runOnce(()->{
+            rotationalAdjustment = 0;
+            targetId = -1;
+        }));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
