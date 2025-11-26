@@ -58,7 +58,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
-    // private final DriveTrainSimulationConfig driveTrainSimulationConfig =  new DriveTrainSimulationConfig(Pounds.of(100), Inches.of(5), Inches.of(5), Inches.of(30), Inches.of(30), new GyroSimulation(0.02, 0.05), new Sim  );
     private final DriveTrainSimulationConfig driveTrainSimulationConfig =  DriveTrainSimulationConfig.Default()
         .withRobotMass(Pounds.of(100))
         .withBumperSize(Inches.of(35), Inches.of(35))

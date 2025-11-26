@@ -1,6 +1,6 @@
 {
   "name": "Test Chassis 2025",
-  "disableSimplification": true,
+  "disableSimplification": false,
   "rotations": [
   {
   "axis": "z",

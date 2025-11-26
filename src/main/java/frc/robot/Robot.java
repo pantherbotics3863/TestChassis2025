@@ -23,13 +23,9 @@ public class Robot extends LoggedRobot {
   private final VisionSim visionSim;
 
   public Robot() {
-
     Logger.addDataReceiver(new NT4Publisher());
-    // if (isSimulation()){
-    //   setUseTiming(false); // Run as fast as possible
-    // }
-
-    Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
+    Logger.start();
+    
     m_robotContainer = new RobotContainer();
     visionSim = new VisionSim(m_robotContainer.getCammy());
   }
@@ -105,7 +101,7 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("FieldSimulation/RobotPose", m_robotContainer.drivetrain.getSimPose());
     Logger.recordOutput("FieldSimulation/RobotOdometry", m_robotContainer.drivetrain.getSimOdometryPose());
 
-    Optional<PhotonTrackedTarget> trackedTarget = m_robotContainer.getVisionSubsystem().getTargetPose();
+    Optional<PhotonTrackedTarget> trackedTarget = m_robotContainer.getVisionSubsystem().getBestTargetPose();
     
     if (trackedTarget.isPresent()){
       Logger.recordOutput("Vision/TargetData/ID", trackedTarget.get().fiducialId);

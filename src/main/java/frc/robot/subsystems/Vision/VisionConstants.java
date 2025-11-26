@@ -11,6 +11,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.units.measure.Distance;
 
 /** Add your docs here. */
 public class VisionConstants {
@@ -20,13 +21,13 @@ public class VisionConstants {
     // The Robot to the Camera Transform
     public static final Transform3d kRobotToCamera = new Transform3d(
         Inches.of(6.5), Inches.of(3.5), Inches.of(20.5), 
-        new Rotation3d(Degrees.of(80),Degrees.of(20),Degrees.of(-27))
+        new Rotation3d(Degrees.of(80),Degrees.of(0),Degrees.of(0))
     );
 
     public static final Transform3d kCameraToRobot = kRobotToCamera.inverse();
-    // new Transform3d(Inches.of(-5.5), Inches.of(-2), Inches.of(-16), 
-    // new Rotation3d(Degrees.of(90),Degrees.of(-10),Degrees.of(25))
-    // );
+    
     public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+    
+    public static final Distance kDesiredTargetRange = Inches.of(12);
     
 }

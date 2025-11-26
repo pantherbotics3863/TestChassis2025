@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.Vision;
 
-import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -29,7 +28,7 @@ public class VisionSim extends SubsystemBase {
     // Property Setting
     cameraProperties.setCalibration(1280, 800, Rotation2d.fromDegrees(80));
     cameraProperties.setCalibError(0.25, 0.08);
-    cameraProperties.setFPS(20);
+    cameraProperties.setFPS(120);
     cameraProperties.setAvgLatencyMs(35);
     cameraProperties.setLatencyStdDevMs(5);
 

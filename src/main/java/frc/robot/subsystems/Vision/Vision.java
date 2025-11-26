@@ -26,7 +26,11 @@ public class Vision extends SubsystemBase {
     return cam;
   }
 
-  public Optional<PhotonTrackedTarget> getTargetPose(){
+  public PhotonPipelineResult getLatestResult(){
+    return cam.getLatestResult();
+  }
+
+  public Optional<PhotonTrackedTarget> getBestTargetPose(){
     PhotonPipelineResult result = cam.getLatestResult();
     if (result.hasTargets()){
       return Optional.of(result.getBestTarget());
