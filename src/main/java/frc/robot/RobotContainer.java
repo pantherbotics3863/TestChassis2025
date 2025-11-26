@@ -14,6 +14,7 @@ import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -27,6 +28,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -36,10 +38,13 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Vision.Vision;
 import frc.robot.subsystems.Vision.VisionConstants;
+import pabeles.concurrency.IntOperatorTask.Max;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+    private double AngleDes = 0;
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -63,6 +68,7 @@ public class RobotContainer {
     private final AutoFactory autoFactory;
 
     private double rotationalAdjustment = 0;
+    private double forwardAdjustment = 0;
 
   
     public RobotContainer() {
@@ -91,14 +97,16 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed + forwardAdjustment * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate + rotationalAdjustment * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ).alongWith(
                 Commands.run(()->{
                     if (Robot.isSimulation()){
                         drivetrain.getSimulatedDrivetrain().runChassisSpeeds(
-                            new ChassisSpeeds(-joystick.getLeftY() * MaxSpeed, -joystick.getLeftX() * MaxSpeed, -joystick.getRightX() * MaxAngularRate + rotationalAdjustment * MaxAngularRate),
+                            new ChassisSpeeds(  -joystick.getLeftY() * MaxSpeed + forwardAdjustment * MaxSpeed,
+                                                -joystick.getLeftX() * MaxSpeed + forwardAdjustment * MaxSpeed, 
+                                                -joystick.getRightX() * MaxAngularRate + rotationalAdjustment * MaxAngularRate),
                             Translation2d.kZero,
                             true,
                             false);
@@ -134,12 +142,17 @@ public class RobotContainer {
                     if (targetId == -1){
                         targetId = trackedTarget.get().fiducialId;
                     } else if (targetId == trackedTarget.get().fiducialId){
-                        rotationalAdjustment = -1.0 * (trackedTarget.get().getYaw() * Math.PI / 180.0) - VisionConstants.kCameraToRobot.getRotation().getZ();
+                        rotationalAdjustment = AngleDes + -1.0 * (trackedTarget.get().getYaw() * Math.PI / 180.0) - VisionConstants.kCameraToRobot.getRotation().getZ();
+                        
+                        //need to get the last two adjustments
+                        forwardAdjustment = -1.0 * PhotonUtils.calculateDistanceToTargetMeters(VisionConstants.kCameraToRobot.getZ(), VisionConstants.kTagLayout.getTagPose(targetId).get().getZ(), Units.degreesToRadians(VisionConstants.kCameraToRobot.getRotation().getX()), Units.degreesToRadians(trackedTarget.get().getPitch())) ;
                     } else {
                         rotationalAdjustment = 0;
+                        forwardAdjustment = 0;
                     }
                 } else {
                     rotationalAdjustment = 0;
+                    forwardAdjustment = 0;
                 }
                 Logger.recordOutput("rotationalAdjustment", rotationalAdjustment);
             }
@@ -147,6 +160,7 @@ public class RobotContainer {
 
         joystick.rightBumper().onFalse(Commands.runOnce(()->{
             rotationalAdjustment = 0;
+            forwardAdjustment = 0;
             targetId = -1;
         }));
 
