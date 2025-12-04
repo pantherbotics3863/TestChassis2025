@@ -146,6 +146,9 @@ public class RobotContainer {
                     //         break;
                     //     }
                     // }
+
+
+                    // THE SOLUTION IS TO USE PID CONTROLLERS (look up docs)
                     rotationalAdjustment = -1.0 * (VisionConstants.kTagLayout.getTagPose(targetId).get().getRotation().getZ() - drivetrain.getPose().getRotation().getRadians());
                     DogLog.log("targetYaw", trackedTarget.get().getYaw());
                     xForwardAdjustment = -1.0 * VisionConstants.kTagLayout.getTagPose(targetId).get().getTranslation().toTranslation2d().minus(drivetrain.getPose().getTranslation()).getMeasureX().in(Meters);
