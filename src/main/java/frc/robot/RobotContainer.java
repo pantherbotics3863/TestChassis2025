@@ -13,7 +13,6 @@ import java.util.Optional;
 
 import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
-import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -24,6 +23,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -96,16 +96,16 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed + Math.min(xForwardAdjustment, MaxSpeed)) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed + Math.min(yForwardAdjustment, MaxSpeed)) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate + Math.min(rotationalAdjustment, MaxAngularRate)) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed + xForwardAdjustment * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed + yForwardAdjustment * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate + rotationalAdjustment * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ).alongWith(
                 Commands.run(()->{
                     if (Robot.isSimulation()){
                         drivetrain.getSimulatedDrivetrain().runChassisSpeeds(
                             new ChassisSpeeds(  -joystick.getLeftY() * MaxSpeed + Math.min(xForwardAdjustment, MaxSpeed),
                                                 -joystick.getLeftX() * MaxSpeed + Math.min(yForwardAdjustment, MaxSpeed), 
-                                                -joystick.getRightX() * MaxAngularRate + Math.min(rotationalAdjustment, MaxAngularRate)),
+                                                -joystick.getRightX() * MaxAngularRate + rotationalAdjustment),
                             Translation2d.kZero,
                             true,
                             false);
@@ -140,31 +140,24 @@ public class RobotContainer {
                 PhotonPipelineResult result = visionSystem.getLatestResult();
 
                 if (targetId != -1){
-                    for (PhotonTrackedTarget target: result.getTargets()){
-                        if (target.fiducialId == targetId){
-                            trackedTarget = Optional.of(target);
-                            break;
-                        }
-                    }
+                    // for (PhotonTrackedTarget target: result.getTargets()){
+                    //     if (target.fiducialId == targetId){
+                    //         trackedTarget = Optional.of(target);
+                    //         break;
+                    //     }
+                    // }
+                    rotationalAdjustment = -1.0 * (VisionConstants.kTagLayout.getTagPose(targetId).get().getRotation().getZ() - drivetrain.getPose().getRotation().getRadians());
+                    DogLog.log("targetYaw", trackedTarget.get().getYaw());
+                    xForwardAdjustment = -1.0 * VisionConstants.kTagLayout.getTagPose(targetId).get().getTranslation().toTranslation2d().minus(drivetrain.getPose().getTranslation()).getMeasureX().in(Meters);
+                    yForwardAdjustment = -1.0 * VisionConstants.kTagLayout.getTagPose(targetId).get().getTranslation().toTranslation2d().minus(drivetrain.getPose().getTranslation()).getMeasureY().in(Meters);
                 } else {
                     trackedTarget = visionSystem.getBestTargetPose();
-                }
-                if (trackedTarget.isPresent()){
-                    if (targetId == -1){
+                    if (trackedTarget.isPresent()){
                         targetId = trackedTarget.get().fiducialId;
                     }
-                    rotationalAdjustment = -1.0 * Units.degreesToRadians(trackedTarget.get().getYaw()) - VisionConstants.kCameraToRobot.getRotation().getZ();
-                    xForwardAdjustment = trackedTarget.get().bestCameraToTarget.getTranslation().plus(VisionConstants.kRobotToCamera.getTranslation()).getMeasureX().in(Meters);
-                    yForwardAdjustment = trackedTarget.get().bestCameraToTarget.getTranslation().plus(VisionConstants.kRobotToCamera.getTranslation()).getMeasureY().in(Meters);
-                } else {
-                    rotationalAdjustment = 0;
-                    xForwardAdjustment = 0;
-                    yForwardAdjustment = 0;
                 }
-                Logger.recordOutput("rotationalAdjustment", rotationalAdjustment);
-                Logger.recordOutput("xForwardAdjustment", xForwardAdjustment);
-                Logger.recordOutput("yForwardAdjustment", yForwardAdjustment);
-
+                
+                
             }
         ));
 
@@ -193,7 +186,7 @@ public class RobotContainer {
     public void setFieldRelativeFromCamera(){
         Optional<Pose3d> fieldPose = visionSystem.getFieldPose();
         if (fieldPose.isPresent()){
-            Logger.recordOutput("Vision/visionPose", fieldPose.get().toPose2d());
+            DogLog.log("Vision/visionPose", fieldPose.get().toPose2d());
             drivetrain.addVisionMeasurement(fieldPose.get().toPose2d(), Timer.getTimestamp());
             if (Robot.isSimulation()){
                 drivetrain.getSimulatedDrivetrain().addVisionEstimation(fieldPose.get().toPose2d(), Timer.getTimestamp());
