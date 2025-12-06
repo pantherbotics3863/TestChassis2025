@@ -24,11 +24,13 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import dev.doglog.DogLog;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -58,6 +60,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     private final Vision visionSystem = new Vision("cammy");
+    private final ProfiledPIDController rotationController = new ProfiledPIDController(0.5, 0.5, 0.5, new Constraints(2, 1));
 
 
     int targetId = -1;
@@ -78,6 +81,8 @@ public class RobotContainer {
             true, 
             drivetrain
         );
+        rotationController.enableContinuousInput(-Math.PI, Math.PI);
+        rotationController.setTolerance(Units.degreesToRadians(3));
 
         configureBindings();
     }
@@ -96,15 +101,15 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed + xForwardAdjustment * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed + yForwardAdjustment * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate + rotationalAdjustment * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) //+ xForwardAdjustment * MaxSpeed) 
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) //yForwardAdjustment * MaxSpeed)
+                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate + rotationalAdjustment ) 
             ).alongWith(
                 Commands.run(()->{
                     if (Robot.isSimulation()){
                         drivetrain.getSimulatedDrivetrain().runChassisSpeeds(
-                            new ChassisSpeeds(  -joystick.getLeftY() * MaxSpeed + Math.min(xForwardAdjustment, MaxSpeed),
-                                                -joystick.getLeftX() * MaxSpeed + Math.min(yForwardAdjustment, MaxSpeed), 
+                            new ChassisSpeeds(  -joystick.getLeftY() * MaxSpeed, //+ xForwardAdjustment * MaxSpeed,
+                                                -joystick.getLeftX() * MaxSpeed, //+ yForwardAdjustment * MaxSpeed, 
                                                 -joystick.getRightX() * MaxAngularRate + rotationalAdjustment),
                             Translation2d.kZero,
                             true,
@@ -133,28 +138,43 @@ public class RobotContainer {
             })
         );
 
+        joystick.rightBumper().onTrue(Commands.runOnce(
+        ()->{
+            rotationController.reset(drivetrain.getRotation3d().getZ());
+        }    
+        ));
 
         joystick.rightBumper().whileTrue(Commands.run(
             ()->{
-                Optional<PhotonTrackedTarget> trackedTarget = Optional.empty(); 
-                PhotonPipelineResult result = visionSystem.getLatestResult();
+                Optional<PhotonTrackedTarget> trackedTarget = visionSystem.getBestTargetPose();
+                
+                if (trackedTarget.isPresent() && trackedTarget.get().fiducialId == targetId) {
+                    
+                    rotationController.setGoal(Units.degreesToRadians(trackedTarget.get().getYaw()));
+                    rotationalAdjustment = rotationController.calculate(0);
+
+                    DogLog.log("rotationalAdjustment", rotationalAdjustment);
+                    DogLog.log("targetyaw", trackedTarget.get().getYaw());
+                    DogLog.log("targetpitch", trackedTarget.get().getPitch());
+                    DogLog.log("targetskew", trackedTarget.get().getSkew());
+
+                } else {
+                    rotationalAdjustment = 0;
+                }
+
 
                 if (targetId != -1){
-                    // for (PhotonTrackedTarget target: result.getTargets()){
-                    //     if (target.fiducialId == targetId){
-                    //         trackedTarget = Optional.of(target);
-                    //         break;
-                    //     }
-                    // }
-                    rotationalAdjustment = -1.0 * (VisionConstants.kTagLayout.getTagPose(targetId).get().getRotation().getZ() - drivetrain.getPose().getRotation().getRadians());
-                    DogLog.log("targetYaw", trackedTarget.get().getYaw());
+                    
                     xForwardAdjustment = -1.0 * VisionConstants.kTagLayout.getTagPose(targetId).get().getTranslation().toTranslation2d().minus(drivetrain.getPose().getTranslation()).getMeasureX().in(Meters);
                     yForwardAdjustment = -1.0 * VisionConstants.kTagLayout.getTagPose(targetId).get().getTranslation().toTranslation2d().minus(drivetrain.getPose().getTranslation()).getMeasureY().in(Meters);
+                    
                 } else {
                     trackedTarget = visionSystem.getBestTargetPose();
                     if (trackedTarget.isPresent()){
                         targetId = trackedTarget.get().fiducialId;
                     }
+
+                    DogLog.log("targetID", targetId);
                 }
                 
                 
@@ -166,6 +186,9 @@ public class RobotContainer {
             rotationalAdjustment = 0;
             xForwardAdjustment = 0;
             yForwardAdjustment = 0;
+
+            DogLog.log("targetID", targetId);
+            DogLog.log("rotationalAdjustment", rotationalAdjustment);
         }));
 
         // Run SysId routines when holding back/start and X/Y.
