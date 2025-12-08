@@ -150,8 +150,8 @@ public class RobotContainer {
                 
                 if (trackedTarget.isPresent() && trackedTarget.get().fiducialId == targetId) {
                     
-                    rotationController.setGoal(Units.degreesToRadians(trackedTarget.get().getYaw()));
-                    rotationalAdjustment = rotationController.calculate(0);
+                    rotationController.setGoal(0);
+                    rotationalAdjustment = rotationController.calculate(Units.degreesToRadians(trackedTarget.get().getPitch()));
 
                     DogLog.log("rotationalAdjustment", rotationalAdjustment);
                     DogLog.log("targetyaw", trackedTarget.get().getYaw());
