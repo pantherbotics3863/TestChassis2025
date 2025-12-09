@@ -20,7 +20,7 @@ public class VisionConstants {
     
     // The Robot to the Camera Transform
     public static final Transform3d kRobotToCamera = new Transform3d(
-        Inches.of(6.5), Inches.of(3.5), Inches.of(20.5), 
+        Inches.of(4.5), Inches.of(5), Inches.of(20.5), 
         new Rotation3d(Degrees.of(0),Degrees.of(0),Degrees.of(0))
     );
 

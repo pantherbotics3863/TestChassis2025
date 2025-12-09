@@ -60,7 +60,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     private final Vision visionSystem = new Vision("cammy");
-    private final ProfiledPIDController rotationController = new ProfiledPIDController(0.5, 0.5, 0.5, new Constraints(2, 1));
+    private final ProfiledPIDController rotationController = new ProfiledPIDController(2, 0, 6, new Constraints(2, 1));
 
 
     int targetId = -1;
@@ -101,15 +101,15 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) //+ xForwardAdjustment * MaxSpeed) 
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) //yForwardAdjustment * MaxSpeed)
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed + xForwardAdjustment * MaxSpeed) 
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed + yForwardAdjustment * MaxSpeed)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate + rotationalAdjustment ) 
             ).alongWith(
                 Commands.run(()->{
                     if (Robot.isSimulation()){
                         drivetrain.getSimulatedDrivetrain().runChassisSpeeds(
-                            new ChassisSpeeds(  -joystick.getLeftY() * MaxSpeed, //+ xForwardAdjustment * MaxSpeed,
-                                                -joystick.getLeftX() * MaxSpeed, //+ yForwardAdjustment * MaxSpeed, 
+                            new ChassisSpeeds(  -joystick.getLeftY() * MaxSpeed + xForwardAdjustment * MaxSpeed,
+                                                -joystick.getLeftX() * MaxSpeed + yForwardAdjustment * MaxSpeed, 
                                                 -joystick.getRightX() * MaxAngularRate + rotationalAdjustment),
                             Translation2d.kZero,
                             true,
