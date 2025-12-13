@@ -83,6 +83,7 @@ public class Robot extends TimedRobot {
   @Override
   public void simulationInit(){
     Arena2025Reefscape.getInstance().addDriveTrainSimulation(m_robotContainer.drivetrain.getSimulatedDrivetrain().getDriveTrainSimulation());
+    m_robotContainer.drivetrain.getSimulatedDrivetrain().setSimulationWorldPose(GeneralConstants.initialPose);
   }
 
   @Override

@@ -4,17 +4,11 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import java.util.Optional;
 
 import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.photonvision.PhotonCamera;
-import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -39,28 +33,28 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.RobotUtils;
+import frc.robot.subsystems.RobotUtils.Adjustments2d;
 import frc.robot.subsystems.Vision.Vision;
 import frc.robot.subsystems.Vision.VisionConstants;
 
 public class RobotContainer {
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
+    
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(GeneralConstants.kMaxSpeed * 0.1).withRotationalDeadband(GeneralConstants.kMaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final Telemetry logger = new Telemetry(GeneralConstants.kMaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     private final Vision visionSystem = new Vision("cammy");
-    private final ProfiledPIDController rotationController = new ProfiledPIDController(2, 0, 6, new Constraints(2, 1));
+    private final ProfiledPIDController rotationController = new ProfiledPIDController(1, 0, 0, new Constraints(2, 1));
 
 
     int targetId = -1;
@@ -101,16 +95,16 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed + xForwardAdjustment * MaxSpeed) 
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed + yForwardAdjustment * MaxSpeed)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate + rotationalAdjustment ) 
+                drive.withVelocityX(-joystick.getLeftY() * GeneralConstants.kMaxSpeed + xForwardAdjustment * GeneralConstants.kMaxSpeed) 
+                    .withVelocityY(-joystick.getLeftX() * GeneralConstants.kMaxSpeed + yForwardAdjustment * GeneralConstants.kMaxSpeed)
+                    .withRotationalRate(-joystick.getRightX() * GeneralConstants.kMaxAngularRate + rotationalAdjustment ) 
             ).alongWith(
                 Commands.run(()->{
                     if (Robot.isSimulation()){
                         drivetrain.getSimulatedDrivetrain().runChassisSpeeds(
-                            new ChassisSpeeds(  -joystick.getLeftY() * MaxSpeed + xForwardAdjustment * MaxSpeed,
-                                                -joystick.getLeftX() * MaxSpeed + yForwardAdjustment * MaxSpeed, 
-                                                -joystick.getRightX() * MaxAngularRate + rotationalAdjustment),
+                            new ChassisSpeeds(  -joystick.getLeftY() * GeneralConstants.kMaxSpeed + xForwardAdjustment * GeneralConstants.kMaxSpeed,
+                                                -joystick.getLeftX() * GeneralConstants.kMaxSpeed + yForwardAdjustment * GeneralConstants.kMaxSpeed, 
+                                                -joystick.getRightX() * GeneralConstants.kMaxAngularRate + rotationalAdjustment),
                             Translation2d.kZero,
                             true,
                             false);
@@ -163,12 +157,14 @@ public class RobotContainer {
                     rotationalAdjustment = 0;
                 }
 
+                if (targetId != -1) {
 
-                if (targetId != -1){
-                    
-                    xForwardAdjustment = -1.0 * VisionConstants.kTagLayout.getTagPose(targetId).get().getTranslation().toTranslation2d().minus(drivetrain.getPose().getTranslation()).getMeasureX().in(Meters);
-                    yForwardAdjustment = -1.0 * VisionConstants.kTagLayout.getTagPose(targetId).get().getTranslation().toTranslation2d().minus(drivetrain.getPose().getTranslation()).getMeasureY().in(Meters);
-                    
+                    Adjustments2d adjustments = RobotUtils.getAdjustmentToPose(VisionConstants.kTagLayout.getTagPose(targetId).get().toPose2d(), drivetrain.getPose());
+                    xForwardAdjustment = adjustments.getXAdjustment();
+                    yForwardAdjustment = adjustments.getYAdjustment();
+                    // Consider using Pose to determine rotationalAdjustment instead of camera yaw (which flucates more)
+                    // rotationalAdjustment = adjustments.getRotationAdjustment();
+                
                 } else {
                     trackedTarget = visionSystem.getBestTargetPose();
                     if (trackedTarget.isPresent()){
@@ -222,14 +218,17 @@ public class RobotContainer {
     public AutoRoutine myAuto() {
         AutoRoutine routine = autoFactory.newRoutine("myRoutine");
 
-        AutoTrajectory spinInCircle = routine.trajectory("moveInSquare");
+        AutoTrajectory traj = routine.trajectory("moveInSquare");
 
         routine.active().onTrue(
             Commands.sequence(
-                spinInCircle.resetOdometry(),
-                spinInCircle.cmd()
-            )
-            
+                Commands.runOnce(()->{
+                    DogLog.log("Auto/goalPose", traj.getInitialPose().orElse(new Pose2d()));
+                }),
+                RobotUtils.moveToPose(drivetrain, traj.getInitialPose().orElse(drivetrain.getPose())),
+                traj.resetOdometry(),
+                traj.cmd()
+                )
         );
 
         return routine;

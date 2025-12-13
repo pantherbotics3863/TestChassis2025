@@ -19,6 +19,8 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -28,7 +30,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.generated.TunerConstants;
+import frc.robot.GeneralConstants;
+import frc.robot.Robot;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -64,7 +67,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         .withTrackLengthTrackWidth(Inches.of(30), Inches.of(30))
     ;
 
-    private final SelfControlledSwerveDriveSimulation simulatedDrivetrain = new SelfControlledSwerveDriveSimulation(new SwerveDriveSimulation(driveTrainSimulationConfig, TunerConstants.initialPose));
+    private final SelfControlledSwerveDriveSimulation simulatedDrivetrain = new SelfControlledSwerveDriveSimulation(new SwerveDriveSimulation(driveTrainSimulationConfig, GeneralConstants.initialPose));
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -330,7 +333,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public Pose2d getPose(){
         return getState().Pose;
     }
-
+    
     public Pose2d getSimPose() {
         return simulatedDrivetrain.getActualPoseInSimulationWorld();
     }
@@ -356,6 +359,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_pathApplyFieldSpeeds.withSpeeds(targetSpeeds)
                         .withWheelForceFeedforwardsX(sample.moduleForcesX())
                         .withWheelForceFeedforwardsY(sample.moduleForcesY()));
+        if (Robot.isSimulation()) {
+            simulatedDrivetrain.runChassisSpeeds(
+                            targetSpeeds,
+                            Translation2d.kZero,
+                            true,
+                            false);
+        }
     }
 
     public SelfControlledSwerveDriveSimulation getSimulatedDrivetrain(){

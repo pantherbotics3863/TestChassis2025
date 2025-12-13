@@ -39,15 +39,6 @@ public class Vision extends SubsystemBase {
   }
 
   public Optional<Pose3d> getFieldPose() {
-    // Optional<PhotonTrackedTarget> potentialTarget = getTargetPose();
-    // if (potentialTarget.isPresent()){
-    //   PhotonTrackedTarget target = potentialTarget.get();
-    //   if (VisionConstants.kTagLayout.getTagPose(target.getFiducialId()).isPresent()){
-    //     return Optional.of( PhotonUtils.estimateFieldToRobotAprilTag(target.getBestCameraToTarget(), VisionConstants.kTagLayout.getTagPose(target.getFiducialId()).get(), VisionConstants.kCameraToRobot) );
-    //   }
-    // }
-    // return Optional.empty();
-
     Optional<EstimatedRobotPose> estimatedPose = Optional.empty();
     for (PhotonPipelineResult newResult : cam.getAllUnreadResults()){
       estimatedPose = photonPoseEstimator.update(newResult);
