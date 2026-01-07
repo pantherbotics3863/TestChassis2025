@@ -37,6 +37,7 @@ import frc.robot.subsystems.RobotUtils;
 import frc.robot.subsystems.RobotUtils.Adjustments2d;
 import frc.robot.subsystems.Vision.Vision;
 import frc.robot.subsystems.Vision.VisionConstants;
+import frc.robot.subsystems.Arm.Grip;
 
 public class RobotContainer {
     
@@ -56,8 +57,11 @@ public class RobotContainer {
     private final Vision visionSystem = new Vision("cammy");
     private final ProfiledPIDController rotationController = new ProfiledPIDController(1, 0, 0, new Constraints(2, 1));
 
-
+    
     int targetId = -1;
+
+    private final Grip grip = new Grip();
+    private final Pivot pivot = new Pivot();
 
     // Choreo AutoFactory
 
@@ -201,6 +205,13 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        // Claw's Grip controls
+        joystick.a().onTrue(grip.openClaw());   // Hold A to open claw
+        joystick.b().whileTrue(grip.closeClaw());  // Hold B to close claw
+
+        joystick.x().whileTrue(pivot.runManual(0.5));  // Move Up
+        joystick.y().whileTrue(pivot.runManual(-0.5)); // Move Down
     }
 
     public void setFieldRelativeFromCamera(){
