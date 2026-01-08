@@ -9,13 +9,14 @@ package frc.robot.subsystems.Arm;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Movement extends SubsystemBase {
   private final double gearRatio = 0;
-  private final TalonFX leftMotor = new TalonFX(0);
-  private final TalonFX rightMotor = new TalonFX(0);
+  private final TalonFX leftMotor = new TalonFX(16);
+  private final TalonFX rightMotor = new TalonFX(19);
   private double maxRotation = 0;
   /** Creates a new Movement. */
   public Movement() {}
@@ -25,7 +26,7 @@ public class Movement extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-  public Command setRotation() {
+  public Command setRotation(Angle angle) {
     return null;
   }
 
@@ -33,11 +34,11 @@ public class Movement extends SubsystemBase {
     return null;
   }
 
-  public Command runRotationalSpeed() {
+  public Command runRotationalSpeed(AngularVelocity speed) {
     return null;
   }
 
-  public Command runFlexSpeed() {
+  public Command runFlexSpeed(AngularVelocity speed) {
     return null;
   }
 

@@ -7,17 +7,17 @@
 package frc.robot.subsystems.Arm;
 
 import static edu.wpi.first.units.Units.Inches;
-
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Extender extends SubsystemBase {
-  private final double maxRotations = 0;
-  private final Distance maxLength = Inches.of(0);
-  private final TalonFX motor = new TalonFX(0);
+  private final double maxRotations = 1;
+  private final Distance maxLength = Inches.of(12);
+  private final TalonFX motor = new TalonFX(15);
 
   /** Creates a new Extender. */
   public Extender() {}
@@ -31,11 +31,11 @@ public class Extender extends SubsystemBase {
     return null;
   }
 
-  public Command setPosition() {
+  public Command setPosition(Distance distance) {
     return null;
   }
 
-  public Command runSpeed() {
+  public Command runSpeed(Velocity velocity) {
     return null;
   }
 }

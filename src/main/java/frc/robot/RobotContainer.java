@@ -38,6 +38,7 @@ import frc.robot.subsystems.RobotUtils.Adjustments2d;
 import frc.robot.subsystems.Vision.Vision;
 import frc.robot.subsystems.Vision.VisionConstants;
 import frc.robot.subsystems.Arm.Grip;
+import frc.robot.subsystems.Arm.Pivot;
 
 public class RobotContainer {
     
@@ -124,10 +125,10 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
 
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
-        ));
+        // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        // joystick.b().whileTrue(drivetrain.applyRequest(() ->
+        //     point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
+        // ));
         joystick.y().onTrue(
             Commands.runOnce(()->{
                 if (Robot.isSimulation()){
@@ -210,8 +211,6 @@ public class RobotContainer {
         joystick.a().onTrue(grip.openClaw());   // Hold A to open claw
         joystick.b().whileTrue(grip.closeClaw());  // Hold B to close claw
 
-        joystick.x().whileTrue(pivot.runManual(0.5));  // Move Up
-        joystick.y().whileTrue(pivot.runManual(-0.5)); // Move Down
     }
 
     public void setFieldRelativeFromCamera(){
