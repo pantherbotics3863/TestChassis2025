@@ -211,6 +211,16 @@ public class RobotContainer {
         joystick.a().onTrue(grip.openClaw());   // Hold A to open claw
         joystick.b().whileTrue(grip.closeClaw());  // Hold B to close claw
 
+
+        // Pivot controls
+        joystick.rightTrigger().whileTrue(pivot.runSpeed());          // Hold right trigger to move arm up
+        joystick.leftTrigger().whileTrue(
+            Commands.run(() -> pivot.motor.set(-0.3), pivot)         // Hold left trigger to move arm down
+                .finallyDo(() -> pivot.motor.set(0))
+        );
+
+        joystick.x().onTrue(pivot.setAngle());                        // Press X to zero the pivot angle
+
     }
 
     public void setFieldRelativeFromCamera(){
