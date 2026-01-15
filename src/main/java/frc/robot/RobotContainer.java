@@ -4,6 +4,10 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import edu.wpi.first.units.Units;
 import java.util.Optional;
 
 import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
@@ -35,10 +39,11 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.RobotUtils;
 import frc.robot.subsystems.RobotUtils.Adjustments2d;
+import frc.robot.subsystems.Arm.Grip;
+import frc.robot.subsystems.Arm.Movement;
+import frc.robot.subsystems.Arm.Pivot;
 import frc.robot.subsystems.Vision.Vision;
 import frc.robot.subsystems.Vision.VisionConstants;
-import frc.robot.subsystems.Arm.Grip;
-import frc.robot.subsystems.Arm.Pivot;
 
 public class RobotContainer {
     
@@ -71,7 +76,8 @@ public class RobotContainer {
     private double rotationalAdjustment = 0;
     private double xForwardAdjustment = 0;
     private double yForwardAdjustment = 0;
-  
+    private final Movement clawMovement = new Movement();
+
     public RobotContainer() {
         autoFactory = new AutoFactory(
             drivetrain::getPose,
@@ -116,6 +122,7 @@ public class RobotContainer {
                     }
                 })
             )
+            
         );
 
         // Idle while the robot is disabled. This ensures the configured
@@ -210,6 +217,73 @@ public class RobotContainer {
         // Claw's Grip controls
         joystick.a().onTrue(grip.openClaw());   // Hold A to open claw
         joystick.b().whileTrue(grip.closeClaw());  // Hold B to close claw
+
+
+        // Pivot controls
+        joystick.rightTrigger().whileTrue(
+            pivot.runSpeed(Units.RotationsPerSecond.of(0.5))
+        );
+
+        joystick.leftTrigger().whileTrue(
+            pivot.runSpeed(Units.RotationsPerSecond.of(-0.3))
+        );
+
+
+        joystick.x().onTrue(pivot.setAngle());                        // Press X to zero the pivot angle
+
+        joystick.povUp().whileTrue(
+            clawMovement.runFlexSpeed(RotationsPerSecond.of(8)).alongWith(Commands.runOnce(
+            ()->
+            {
+                DogLog.log("button held", true);
+            }
+            ))
+            );
+        
+        joystick.povUp().onFalse(
+            Commands.runOnce(()->DogLog.log("button held", false))
+        );
+
+        joystick.povDown().whileTrue(
+            clawMovement.runFlexSpeed(RotationsPerSecond.of(-8)).alongWith(Commands.runOnce(
+            ()->
+            {
+                DogLog.log("button held", true);
+            }
+            ))
+            );
+        
+        joystick.povDown().onFalse(
+            Commands.runOnce(()->DogLog.log("button held", false))
+        );
+
+
+        joystick.povRight().whileTrue(
+            clawMovement.runRotationalSpeed(RotationsPerSecond.of(8)).alongWith(Commands.runOnce(
+            ()->
+            {
+                DogLog.log("button held", true);
+            }
+            ))
+            );
+        
+        joystick.povRight().onFalse(
+            Commands.runOnce(()->DogLog.log("button held", false))
+        );
+
+        joystick.povLeft().whileTrue(
+            clawMovement.runRotationalSpeed(RotationsPerSecond.of(-8)).alongWith(Commands.runOnce(
+            ()->
+            {
+                DogLog.log("button held", true);
+            }
+            ))
+            );
+        
+        joystick.povLeft().onFalse(
+            Commands.runOnce(()->DogLog.log("button held", false))
+        );
+        
 
     }
 
